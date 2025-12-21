@@ -5,6 +5,7 @@ AI-powered fraud, waste, and abuse detection system for public expenditure.
 """
 
 from fastapi import FastAPI
+from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
@@ -144,10 +145,21 @@ app.include_router(document.router)
 app.include_router(upload.router)
 
 
+# Mount frontend directory for static files (css, js)
+# We mount it at /static so index.html can reference style.css and script.js
+app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+
 @app.get("/", tags=["Root"])
 async def root():
     """
-    Root endpoint with API information.
+    Serve the frontend application.
+    """
+    return FileResponse('frontend/index.html')
+
+@app.get("/api/info", tags=["Root"])
+async def api_info():
+    """
+    API information endpoint.
     """
     return {
         "message": f"Welcome to {settings.app_name}",
