@@ -39,6 +39,82 @@ class FraudIndicator(BaseModel):
     type: str = Field(..., description="Type of fraud indicator")
     severity: str = Field(..., description="Severity level: low, medium, high")
     description: str = Field(..., description="Description of the indicator")
+    confidence: float = Field(..., description="Confidence as float 0-1")
+
+
+class AuditResponse(BaseModel):
+    """Response model for a single transaction audit."""
+    
+    risk_score: float = Field(..., description="Risk score from 0 to 100")
+    risk_level: str = Field(..., description="Risk level: low, medium, high, critical")
+    fraud_indicators: List[FraudIndicator] = Field(..., description="List of fraud indicators")
+    summary: str = Field(..., description="Summary of findings")
+    recommendations: List[str] = Field(..., description="Recommended actions")
+    timestamp: datetime = Field(..., description="ISO timestamp of analysis")
+
+
+class DocumentAuditResponse(BaseModel):
+    """Structured response for document-level analysis."""
+    
+    risk_level: str = Field(..., description="Overall document risk level")
+    summary: str = Field(..., description="Summary of findings for document")
+    list_of_flags: List[Dict[str, Any]] = Field(..., description="List of flagged issues")
+    recommendations: List[str] = Field(..., description="Recommendations")
+    total_flagged_amount: Optional[float] = Field(None, description="Total amount flagged")
+    document_metadata: Optional[Dict[str, Any]] = Field(None, description="Metadata about the document")
+    timestamp: Optional[datetime] = Field(None, description="Timestamp of analysis")
+
+
+# File upload schemas
+class FileUploadResponse(BaseModel):
+    """Response model for file upload and analysis."""
+    
+    filename: str = Field(..., description="Original filename")
+    file_type: str = Field(..., description="File type (.pdf, .docx, .txt)")
+    file_size_bytes: int = Field(..., description="File size in bytes")
+    extracted_text_length: int = Field(..., description="Length of extracted text")
+    analysis: DocumentAuditResponse = Field(..., description="Fraud analysis results")
+"""Pydantic schemas for request/response validation."""
+
+from pydantic import BaseModel, Field
+from typing import List, Optional, Dict, Any
+from datetime import datetime
+
+
+class AuditRequest(BaseModel):
+    """Request model for audit analysis."""
+    
+    transaction_description: str = Field(
+        ...,
+        description="Description of the financial transaction or expenditure",
+        min_length=10,
+        max_length=5000
+    )
+    amount: float = Field(
+        ...,
+        description="Transaction amount",
+        gt=0
+    )
+    vendor: Optional[str] = Field(
+        None,
+        description="Vendor or recipient name"
+    )
+    category: Optional[str] = Field(
+        None,
+        description="Expenditure category"
+    )
+    additional_context: Optional[str] = Field(
+        None,
+        description="Any additional context or notes"
+    )
+
+
+class FraudIndicator(BaseModel):
+    """Individual fraud indicator."""
+    
+    type: str = Field(..., description="Type of fraud indicator")
+    severity: str = Field(..., description="Severity level: low, medium, high")
+    description: str = Field(..., description="Description of the indicator")
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score")
 
 

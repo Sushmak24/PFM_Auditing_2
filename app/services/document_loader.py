@@ -28,6 +28,65 @@ class DocumentLoaderService:
     # Supported file types
     SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt'}
     
+    def load(self, path: str) -> Tuple[str, str]:
+        """Load a document and return tuple of (text, extension)."""
+        ext = Path(path).suffix.lower()
+        if ext not in self.SUPPORTED_EXTENSIONS:
+            raise ValueError(f"Unsupported file type: {ext}")
+        
+        if ext == '.pdf':
+            loader = PyPDFLoader(path)
+            docs = loader.load()
+            text = "\n".join([d.page_content for d in docs])
+            return text, ext
+
+        if ext == '.docx':
+            loader = Docx2txtLoader(path)
+            docs = loader.load()
+            text = "\n".join([d.page_content for d in docs])
+            return text, ext
+
+        if ext == '.txt':
+            loader = TextLoader(path)
+            docs = loader.load()
+            text = "\n".join([d.page_content for d in docs])
+            return text, ext
+
+        # Fallback
+        raise ValueError("Unable to load document")
+
+
+document_loader = DocumentLoaderService()
+"""Document processing and text extraction service."""
+
+import os
+import tempfile
+from pathlib import Path
+from typing import Tuple, Optional
+from datetime import datetime
+import shutil
+
+# LangChain document loaders
+from langchain_community.document_loaders import (
+    PyPDFLoader,
+    Docx2txtLoader,
+    TextLoader,
+    UnstructuredFileLoader
+)
+
+# PDF processing
+from PyPDF2 import PdfReader
+
+# DOCX processing
+from docx import Document as DocxDocument
+
+
+class DocumentLoaderService:
+    """Service for loading and extracting text from various document formats."""
+    
+    # Supported file types
+    SUPPORTED_EXTENSIONS = {'.pdf', '.docx', '.txt'}
+    
     # Maximum file size (10MB)
     MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024
     
